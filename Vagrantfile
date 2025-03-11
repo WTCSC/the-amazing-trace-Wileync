@@ -2,6 +2,8 @@ Vagrant.configure("2") do |config|
   # Use Ubuntu 20.04 LTS as base image
   config.vm.box = "ubuntu/focal64"
 
+  config.vm.boot_timeout = 600
+
   # Provisioning script
   config.vm.provision "shell", inline: <<-SHELL
     # Update package list

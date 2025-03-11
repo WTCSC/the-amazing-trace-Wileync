@@ -13,7 +13,7 @@ def execute_traceroute(destination):
     try:
         # Add the -I flag for ICMP packets
         routed = subprocess.run(["traceroute", "-I", destination], capture_output=True, text=True, check=True)
-        # print(routed.stdout)  # Print actual traceroute output
+        print(routed.stdout)  # Print actual traceroute output
         return routed.stdout  # Return output for further processing
 
     except subprocess.CalledProcessError as e:
@@ -38,52 +38,39 @@ def execute_traceroute(destination):
     pass
 
 def parse_traceroute(traceroute_output):
-    hops_results = []
+    hops = []
     lines = traceroute_output.splitlines()
 
     for line in lines:
         # Split each line into parts
-        pieces = line.split()
+        parts = line.split()
 
         # Check if the line contains the usual hop information (this avoids empty or malformed lines)
-        if len(pieces) <= 1:
-            continue
+        if len(parts) > 1:
+            # Extract hop number, IP or hostname, and round trip times (RTTs)
+            try:
+                hop_num = int(parts[0])  # The first part is the hop number
+                ip_or_hostname = parts[1]  # The second part is the IP address or hostname
+                rtts = parts[2:]  # The rest are the round-trip times (RTTs)
 
-        print(pieces)
+                # Convert RTTs into float values, replace "*" (timeouts) with None
+                rtts = [float(rtt.split()[0]) if rtt != '*' else None for rtt in rtts]
 
-        # Extract hop number, IP or hostname, and round trip times (RTTs)
-        try:
-            rtts_final = []
-            hop_num = int(pieces[0])  # The first part is the hop number
-            rtts = pieces.split(")")[1] # ["1 localhost (127.0.0.1", "123 ms 123 ms 123 ms"]
-            for part in rtt_parts:
-                if part == "*":
-                    part = None
-                if part not in ["ms", "!X"]:
-                    final_rtts.append(part)
-            #ip_or_hostname = pieces[1]  # The second part is the IP address or hostname
-            #rtts = pieces[3:]  # The rest are the round-trip times (RTTs)
+                # Determine if it's an IP or hostname by checking if it's a valid IP format
+                ip = ip_or_hostname if re.match(r'^\d+\.\d+\.\d+\.\d+$', ip_or_hostname) else None
+                hostname = None if ip else ip_or_hostname
 
-            # Convert RTTs into float values, replace "*" (timeouts) with None
-            rtts = [float(rtt.split()[0]) if rtt != '*' else None for rtt in rtts]
-
-            # Determine if it's an IP or hostname by checking if it's a valid IP format
-            #ip = ip_or_hostname if re.match(r'^\d+\.\d+\.\d+\.\d+$', ip_or_hostname) else None
-            #hostname = None if ip else ip_or_hostname
-
-            # Store each hop's information as a dictionary
-            hops_results.append({
-                'hop': hop_num,
-                'ip': None,
-                'hostname': None,
-                'rtt': rtts_final
-            })
-        except ValueError:
-            print("An error has been encountered")
-            continue  # Skip lines that don't contain valid hop information (e.g., error lines)
-
-    print(hops_results)
-    return hops_results
+                # Store each hop's information as a dictionary
+                hops.append({
+                    'hop': hop_num,
+                    'ip': ip,
+                    'hostname': hostname,
+                    'rtt': rtts
+                })
+            except ValueError:
+                continue  # Skip lines that don't contain valid hop information (e.g., error lines)
+                print(hops)
+    return hops if hops else None
 
     """
     Parses the raw traceroute output into a structured format.
