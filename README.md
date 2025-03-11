@@ -30,3 +30,13 @@ pytest
 we get this output...
 ![alt text](image-1.png)
 We see that all of the tests pass.
+
+## Here are the graphs for our traceroutes...
+## amazon.com
+![alt text](image-2.png)
+
+## bbc.co.uk
+![alt text](image-3.png)
+
+## google.com
+![alt text](image-4.png)
